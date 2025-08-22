@@ -20,7 +20,10 @@ export class OpenAIResponseHandler {
         private readonly message: MessageResponse,
         private readonly onDisposel : () => void,
     ){
-
+        this.chatClient.on("ai_indicator.stop", this.handleStopGenerating)
     }
-
+    run = async() => {} //orchestrator of the application
+    dispose = async() => {}
+    private handleStopGenerating = async(event: Event) => {}
+    
 }
