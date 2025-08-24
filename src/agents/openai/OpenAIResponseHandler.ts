@@ -1,4 +1,4 @@
-import { json } from "express";
+import { json, text } from "express";
 import OpenAI from "openai";
 import { AssistantStream } from "openai/lib/AssistantStream";
 import type { Channel, Event, MessageResponse, StreamChat } from "stream-chat";
@@ -27,7 +27,23 @@ export class OpenAIResponseHandler {
   dispose = async () => {};
   private handleStopGenerating = async (event: Event) => {};
   private handleStreamEvent = async (event: Event) => {};
-  private handleError = async (error: Error) => {};
+  private handleError = async (error: Error) => {
+    if (this.is_done) {
+      return;
+    }
+    await this.channel.sendEvent({
+      type: "ai_indicator.update",
+      ai_state: "AI_STATE_ERROR",
+      cid: this.message.cid,
+      message_id: this.message.id,
+    });
+    await this.chatClient.partialUpdateMessage(this.message.id,{
+        set:{
+            text: error.message ?? "Error generating the message",
+            message: error.toString(),
+        }
+    })
+  };
 
   private performWebSearch = async (query: string): Promise<string> => {
     const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
