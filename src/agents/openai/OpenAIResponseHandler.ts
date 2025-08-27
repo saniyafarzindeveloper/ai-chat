@@ -24,7 +24,11 @@ export class OpenAIResponseHandler {
     this.chatClient.on("ai_indicator.stop", this.handleStopGenerating);
   }
   run = async () => {}; //orchestrator of the application
-  dispose = async () => {};
+  dispose = async () => {
+    if(this.is_done){
+      return
+    }
+  };
   private handleStopGenerating = async (event: Event) => {};
   private handleStreamEvent = async (event: Event) => {};
   private handleError = async (error: Error) => {
@@ -42,7 +46,8 @@ export class OpenAIResponseHandler {
             text: error.message ?? "Error generating the message",
             message: error.toString(),
         }
-    })
+    });
+    await this.dispose();
   };
 
   private performWebSearch = async (query: string): Promise<string> => {
