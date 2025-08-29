@@ -19,17 +19,42 @@ export class OpenAIResponseHandler {
     private readonly chatClient: StreamChat,
     private readonly channel: Channel,
     private readonly message: MessageResponse,
-    private readonly onDisposel: () => void
+    private readonly onDispose: () => void
   ) {
     this.chatClient.on("ai_indicator.stop", this.handleStopGenerating);
   }
   run = async () => {}; //orchestrator of the application
   dispose = async () => {
-    if(this.is_done){
-      return
+    if (this.is_done) {
+      return;
     }
+    this.is_done = true;
+    this.chatClient.off("ai_indicator.stop", this.handleStopGenerating);
+    this.onDispose();
   };
-  private handleStopGenerating = async (event: Event) => {};
+  private handleStopGenerating = async (event: Event) => {
+    if (this.is_done || event.message_id !== this.message.id) {
+      return;
+    }
+    console.log("Stop generating for message", this.message.id);
+    if (!this.openai || !this.openAiThread || !this.run_id) {
+      return;
+    }
+    try {
+      await this.openai.beta.threads.runs.cancel({
+        thread_id: this.openAiThread.id,
+        run_id: this.run_id,
+      });
+    } catch (error) {
+      console.error("Error cancelling run", error);
+    }
+    await this.channel.sendEvent({
+      type: "ai_indicator.clear",
+      cid: this.message.cid,
+      message_id: this.message.id,
+    });
+    await this.dispose();
+  };
   private handleStreamEvent = async (event: Event) => {};
   private handleError = async (error: Error) => {
     if (this.is_done) {
@@ -41,11 +66,11 @@ export class OpenAIResponseHandler {
       cid: this.message.cid,
       message_id: this.message.id,
     });
-    await this.chatClient.partialUpdateMessage(this.message.id,{
-        set:{
-            text: error.message ?? "Error generating the message",
-            message: error.toString(),
-        }
+    await this.chatClient.partialUpdateMessage(this.message.id, {
+      set: {
+        text: error.message ?? "Error generating the message",
+        message: error.toString(),
+      },
     });
     await this.dispose();
   };
