@@ -55,7 +55,12 @@ export class OpenAIResponseHandler {
     });
     await this.dispose();
   };
-  private handleStreamEvent = async (event: Event) => {};
+  private handleStreamEvent = async (event: Event) => {
+    const {cid, id} = this.message;
+    if(event.event === "thread.run.created"){
+      
+    }
+  };
   private handleError = async (error: Error) => {
     if (this.is_done) {
       return;
