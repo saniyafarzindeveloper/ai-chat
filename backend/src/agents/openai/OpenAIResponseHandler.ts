@@ -21,6 +21,7 @@ export class OpenAIResponseHandler {
     this.chatClient.on("ai_indicator.stop", this.handleStopGenerating);
   }
 
+  //orchestrator function
   run = async () => {
     const { cid, id: message_id } = this.message;
     let isCompleted = false;

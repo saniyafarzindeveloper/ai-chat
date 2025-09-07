@@ -1,0 +1,7 @@
+code development tour
+
+1. created constructor for OpenAIResponseHandler.ts
+2. handled different cases for OpenAIResponseHandler
+3. designed orchestrator
+
+OpenAIAgents.ts - whole point is to cleanup & handle the logic building
